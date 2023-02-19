@@ -28,6 +28,8 @@ This code defines a class called `Salesforce_SOQL_Spark_Connector` with the foll
   - Extracts the WHERE clause from a SOQL query.
 - `get_group_by(self, query)`: 
   - Extracts the GROUP BY clause from a SOQL query.
+- `get_order_by(self, query)`: 
+  - Extracts the ORDER BY clause from a SOQL query.
 - `get_limit(self,query)`: 
   - Extracts the LIMIT clause from a SOQL query.
 - `run_query_with_backoff(self, query, include_deleted=False)`: 
