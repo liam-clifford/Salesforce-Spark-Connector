@@ -39,10 +39,10 @@ class Salesforce_SOQL_Spark_Connector:
         select_star = '*' in fields
         return fields, object, select_star
 
-    def build_query(self, fields_a, fields_b, object, where, group_by, limit):
-        query_a = f'SELECT {fields_a} FROM {object} {where} {group_by} {limit}'
+    def build_query(self, fields_a, fields_b, object, where, group_by, order_by, limit):
+        query_a = f'SELECT {fields_a} FROM {object} {where} {group_by} {order_by} {limit}'
         if fields_b:
-            query_b = f'SELECT id, {fields_b} FROM {object} {where} {group_by} {limit}'
+            query_b = f'SELECT id, {fields_b} FROM {object} {where} {group_by} {order_by} {limit}'
             return query_a, query_b
         else:
             return query_a, None
@@ -78,12 +78,16 @@ class Salesforce_SOQL_Spark_Connector:
             return None
 
     def get_where(self, query):
-        match = re.search(r'where\s+(.*)\s+(group by|limit|$)', query, re.IGNORECASE)
+        match = re.search(r'where(.+?)(?:\s+group by|\s+order by|\s+limit|$)', query, re.IGNORECASE)
         return 'WHERE ' + match.group(1) if match else ''
 
     def get_group_by(self, query):
-        match = re.search(r'group by(.*)\s+(limit|$)', query, re.IGNORECASE)
+        match = re.search(r'group by(.+?)(?:\s+order by|\s+limit|$)', query, re.IGNORECASE)
         return 'GROUP BY ' + match.group(1) if match else ''
+      
+    def get_order_by(self, query):
+        match = re.search(r'order by(.+?)(?:\s+limit|$)', query, re.IGNORECASE)
+        return 'ORDER BY ' + match.group(1) if match else ''
       
     def get_limit(self,query):
         match = re.search(r'limit(.*)', query, re.IGNORECASE)
@@ -100,6 +104,7 @@ class Salesforce_SOQL_Spark_Connector:
                     time.sleep(10)
                 else:
                     raise
+                    
 
     def get_query_lists(data, select_star):
         exceeds_field_threshold = False
@@ -118,28 +123,39 @@ class Salesforce_SOQL_Spark_Connector:
 
 
     def build_query_fields(self, fields, object, include_deleted):
-        try:
-            rest_query = f'sobjects/{object}/describe/'
-            data = self.sf.restful(rest_query, params=None)
-        except Exception as e:
-            if 'ConnectionError' in str(e) or 'REQUEST_LIMIT_EXCEEDED' in str(e):
-                print(f'{e}... pausing 10 seconds before re-attempting')
-                time.sleep(10)
+        select_star = '*' in fields
+        
+        if select_star:
+            try:
                 rest_query = f'sobjects/{object}/describe/'
                 data = self.sf.restful(rest_query, params=None)
-            else:
-                data = self.sf.restful(rest_query, params=None)
+            except Exception as e:
+                if 'ConnectionError' in str(e) or 'REQUEST_LIMIT_EXCEEDED' in str(e):
+                    print(f'{e}... pausing 10 seconds before re-attempting')
+                    time.sleep(10)
+                    rest_query = f'sobjects/{object}/describe/'
+                    data = self.sf.restful(rest_query, params=None)
+                else:
+                    data = self.sf.restful(rest_query, params=None)
 
-        query_list_a, query_list_b, exceeds_field_threshold = get_query_lists(data, '*' in fields)
+        else:
+            inputted_fields = fields.split(',')
+            data = {'fields': []}
+            for i in range(len(inputted_fields)):
+                data['fields'].append({'name': inputted_fields[i]})
+                    
+        query_list_a, query_list_b, exceeds_field_threshold = get_query_lists(data, select_star)
 
         additional_fields = [x for x in fields.split(',') if x != '*' \
                              and x.lower() not in [y.lower() for y in query_list_a] \
                              and x.lower() not in [str(y).lower() for y in query_list_b]]
 
-        query_list_a = query_list_a + additional_fields
+        if len(additional_fields)>0:
+          query_list_a = query_list_a + additional_fields
 
         return ','.join(query_list_a), ','.join(query_list_b)
 
+      
     def create_temp_view_from_salesforce_object(self, query, temp_view, include_deleted=False, print_soql=True):
         import re
         import pandas as pd
@@ -152,16 +168,17 @@ class Salesforce_SOQL_Spark_Connector:
         # Build the query strings for API calls
         where = self.get_where(query)
         group_by = self.get_group_by(query)
+        order_by = self.get_order_by(query)
         limit = self.get_limit(query)
 
         fields_a, fields_b = self.build_query_fields(fields, object, include_deleted)
 
         # Make the API call(s)
         if print_soql:
-          print(f'SELECT {fields_a} FROM {object} {where} {group_by} {limit}')
-        
-        data_a = self.run_query(f'SELECT {fields_a} FROM {object} {where} {group_by} {limit}', include_deleted)
-        data_b = self.run_query(f'SELECT id, {fields_b} FROM {object} {where} {group_by} {limit}', include_deleted) if fields_b else None
+          print(f'SELECT {fields_a} FROM {object} {where} {group_by} {order_by} {limit}')
+        print(group_by)
+        data_a = self.run_query(f'SELECT {fields_a} FROM {object} {where} {group_by} {order_by} {limit}', include_deleted)
+        data_b = self.run_query(f'SELECT id, {fields_b} FROM {object} {where} {group_by} {order_by} {limit}', include_deleted) if fields_b else None
 
         # Process the API response into a Spark DataFrame
         spark_df_a = self.process_df(pd.json_normalize(data_a['records']))
