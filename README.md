@@ -1,6 +1,6 @@
 ## Salesforce SOQL Spark Connector
 
-This connector enables users to easily retrieve data from Salesforce and store it in a Spark DataFrame.
+This connector enables users to easily retrieve data from Salesforce and materialize it in a Spark Temporary View.
 
 ### Authentication
 
