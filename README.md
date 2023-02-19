@@ -1,52 +1,66 @@
-# Salesforce-SOQL-Spark-Connector
+## Salesforce SOQL Spark Connector
 
-This code allows you to extract data from a Salesforce object and convert it into a Spark DataFrame.
-
-## Setup
-
-### Dependencies
-
-You need to have the following packages installed:
-
-- pandas
-- numpy
-- datetime
-- requests
-- functools
-- re
-- time
-- json
-- simple_salesforce
-- pyspark
+This connector enables users to easily retrieve data from Salesforce and store it in a Spark DataFrame.
 
 ### Authentication
 
 To use this code in your environment, you need to have your Salesforce username, password, and security token stored as secrets with the names `salesforce/username`, `salesforce/password`, and `salesforce/token`, respectively.
 
-This code uses Databricks Secrets to securely access your Salesforce credentials. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code instead of using Databricks Secrets. To do this, replace the calls to dbutils.secrets.get() with the appropriate code to retrieve your Salesforce credentials.
+This code uses Databricks Secrets to securely access your Salesforce credentials. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code instead of using Databricks Secrets. To do this, replace the calls to `dbutils.secrets.get()` with the appropriate code to retrieve your Salesforce credentials.
 
-### Spark Session
+### Functionality
 
-This code creates a Spark session with the name "Python Spark SQL". You can customize the configuration of the Spark session by modifying the `SparkSession.builder` call in the code.
+This code defines a class called `Salesforce_SOQL_Spark_Connector` with the following methods:
 
-## Usage
+- `__init__(self, username, password, security_token)`: 
+  - Initializes the Salesforce_SOQL_Spark_Connector object with the given Salesforce credentials.
+- `auth(self)`: 
+  - Authenticates the user with Salesforce using the given credentials.
+- `get_fields_and_object(self, query)`: 
+  - Parses the SELECT statement in a SOQL query to return a list of fields and the object being queried.
+- `build_query(self, fields_a, fields_b, object, where, group_by, limit)`: 
+  - Builds one or two SOQL queries based on the given fields, object, and WHERE, GROUP BY, and LIMIT clauses.
+- `run_query(self, query, include_deleted=False)`: 
+  - Executes a SOQL query and returns the data as a dictionary.
+- `process_df(self, df)`: 
+  - Cleans up a Pandas DataFrame obtained from Salesforce and returns a Spark DataFrame.
+- `get_where(self, query)`: 
+  - Extracts the WHERE clause from a SOQL query.
+- `get_group_by(self, query)`: 
+  - Extracts the GROUP BY clause from a SOQL query.
+- `get_limit(self,query)`: 
+  - Extracts the LIMIT clause from a SOQL query.
+- `run_query_with_backoff(self, query, include_deleted=False)`: 
+  - Executes a SOQL query and automatically retries if there is an error.
+- `get_query_lists(self, data, select_star)`: 
+  - Separates a long list of fields into two shorter lists if the length of the list exceeds 400.
+- `build_query_fields(self, fields, object, include_deleted)`: 
+  - Builds a SELECT statement for a SOQL query based on the given fields and object.
+- `create_temp_view_from_salesforce_object(self, query, temp_view, include_deleted=False, print_soql=True)`: 
+  - Retrieves data from Salesforce using a SOQL query, cleans up the data, and stores it in a temporary Spark SQL view.
 
-To extract data from a Salesforce object and convert it into a Spark DataFrame, call the `create_temp_view_from_salesforce_object` function with the following arguments:
+### Usage
 
-- `query`: A SOQL query string
-- `table_name`: A string specifying the name of the temporary view that will be created for the resulting Spark DataFrame
-- `include_deleted`: A Boolean indicating whether deleted records should be included in the results (default False)
+Here's an example of how to use this connector:
 
-The resulting Spark DataFrame can be accessed using the specified `table_name`. You can perform Spark SQL operations on the DataFrame, save it to a file, or create a permanent table in a database using the temporary view.
+```python
+from pyspark.sql import SparkSession
 
-## Functionality
+spark = SparkSession.builder.appName('Salesforce SOQL Spark Connector').getOrCreate()
 
-The `create_temp_view_from_salesforce_object` function performs the following steps:
+# Initialize the Salesforce_SOQL_Spark_Connector object
+sf_to_spark = Salesforce_SOQL_Spark_Connector(dbutils.secrets.get("salesforce", "username"), dbutils.secrets.get("salesforce", "password"), dbutils.secrets.get("salesforce", "token"))
+sf_to_spark.auth()
 
-1. Gets the Salesforce credentials from Databricks Secrets and sets up a Salesforce session
-2. Extracts the fields and object from the query
-3. Builds the query strings for API calls
-4. Makes the API call(s) to Salesforce
-5. Processes the API response into a Pandas DataFrame
-6. Converts the Pandas DataFrame into a Spark DataFrame
-7. Creates a temporary view of the Spark DataFrame using the specified `table_name`
+# Define the SOQL query to retrieve data
+query     = "SELECT owner.name,* FROM opportunity limit 1"
+temp_view = "temp_view"
+
+# Create a temporary view of the Salesforce object in a Spark dataframe
+sf_to_spark.create_temp_view_from_salesforce_object(query, temp_view)
+
+# Query the Spark dataframe to retrieve the data
+data = spark.sql(f"SELECT * FROM {temp_view}")
+
+# Show the data
+display(data)
