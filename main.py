@@ -14,7 +14,6 @@ from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import *
 
-
 class Salesforce_SOQL_Spark_Connector:
     def __init__(self, username, password, security_token):
         self.username = username
@@ -93,7 +92,7 @@ class Salesforce_SOQL_Spark_Connector:
         match = re.search(r'limit(.*)', query, re.IGNORECASE)
         return 'LIMIT ' + match.group(1) if match else ''
 
-    def get_query_lists(data, select_star):
+    def get_query_lists(self, data, select_star):
         exceeds_field_threshold = False
 
         if len(data['fields']) > 400 and select_star:
@@ -131,7 +130,7 @@ class Salesforce_SOQL_Spark_Connector:
             for i in range(len(inputted_fields)):
                 data['fields'].append({'name': inputted_fields[i]})
                     
-        query_list_a, query_list_b, exceeds_field_threshold = get_query_lists(data, select_star)
+        query_list_a, query_list_b, exceeds_field_threshold = self.get_query_lists(data, select_star)
 
         additional_fields = [x for x in fields.split(',') if x != '*' \
                              and x.lower() not in [y.lower() for y in query_list_a] \
