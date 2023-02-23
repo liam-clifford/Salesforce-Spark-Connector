@@ -93,19 +93,6 @@ class Salesforce_SOQL_Spark_Connector:
         match = re.search(r'limit(.*)', query, re.IGNORECASE)
         return 'LIMIT ' + match.group(1) if match else ''
 
-
-    def run_query_with_backoff(self, query, include_deleted=False):
-        while True:
-            try:
-                return self.sf.query_all(query, include_deleted=include_deleted)
-            except Exception as e:
-                if 'ConnectionError' in str(e) or 'REQUEST_LIMIT_EXCEEDED' in str(e):
-                    print(f'{e}... pausing 10 seconds before re-attempting')
-                    time.sleep(10)
-                else:
-                    raise
-                    
-
     def get_query_lists(data, select_star):
         exceeds_field_threshold = False
 
