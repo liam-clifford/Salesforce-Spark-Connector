@@ -14,6 +14,12 @@ from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import *
 
+spark = SparkSession \
+    .builder \
+    .appName("Spark") \
+    .getOrCreate()
+# OPTIONAL IF USING Databricks
+
 class Salesforce_SOQL_Spark_Connector:
     def __init__(self, username, password, security_token):
         self.username = username
