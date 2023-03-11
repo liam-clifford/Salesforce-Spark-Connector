@@ -201,11 +201,11 @@ class Salesforce_Spark_Connector:
             print(f'0 rows returned for query "{query}"')
 
         
-    def export_sfdc_report_into_spark_as_view(self, salesforce_report_id,temp_name):
+    def export_sfdc_report_into_spark_as_view(self, salesforce_report_id, temp_name, domain):
         self.auth()
         headers  = {'Authorization': self.sf.session_id}
         cookie   = {'sid': self.sf.session_id}
-        response = requests.get(f"https://databricks.my.salesforce.com/{salesforce_report_id}?isdtp=p1&export=1&enc=UTF-8&xf=csv", headers=headers, cookies=cookie)
+        response = requests.get(f"https://{domain}.my.salesforce.com/{salesforce_report_id}?isdtp=p1&export=1&enc=UTF-8&xf=csv", headers=headers, cookies=cookie)
 
         urlData  = response.content
         rawData  = pd.read_csv(io.StringIO(urlData.decode('utf-8')))
