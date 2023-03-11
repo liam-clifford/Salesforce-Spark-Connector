@@ -93,9 +93,8 @@ report_id = 'insert_your_18_digit_salesforce_id_here'
 # Define the name you want to give to the temporary Spark SQL view that will be created from the report data
 view_name = 'my_report_data'
 
-# Input your Company's Salesforce Domain
-# you will find this in your Salesforce URL : `https://{domain}.lightning.force.com/` or `https://{domain}.my.salesforce.com`
-domain = 'typically_your_company_name'
+# Input your Company's Salesforce Domain (Typically located: `https://{domain}.lightning.force.com/` or `https://{domain}.my.salesforce.com`)
+domain = 'your_company_sfdc_domain'
 
 # Call the `export_sfdc_report_into_spark_as_view` method on the Salesforce_Spark_Connector instance, passing in the report ID and view name
 sf_connector.export_sfdc_report_into_spark_as_view(report_id, view_name, domain)
