@@ -46,7 +46,7 @@ This code defines a class called `Salesforce_Spark_Connector` with the following
   - Builds a SELECT statement for a SOQL query based on the given fields and object.
 - `create_temp_view_from_salesforce_object(self, query, temp_view, include_deleted=False, print_soql=True)`: 
   - Retrieves data from Salesforce using a SOQL query, cleans up the data, and stores it in a temporary Spark SQL view.
-- `export_sfdc_report_into_spark_as_view(self, salesforce_report_id,temp_name)`:
+- `export_sfdc_report_into_spark_as_view(self, salesforce_report_id, temp_name, domain)`:
   - Retrieves a Salesforce report in CSV format and stores it in a temporary Spark SQL view, allowing the user to easily analyze the report data using SQL.
 
 ### Usage
@@ -93,8 +93,12 @@ report_id = 'insert_your_18_digit_salesforce_id_here'
 # Define the name you want to give to the temporary Spark SQL view that will be created from the report data
 view_name = 'my_report_data'
 
+# Input your Company's Salesforce Domain
+# you will find this in your Salesforce URL : `https://{domain}.lightning.force.com/` or `https://{domain}.my.salesforce.com`
+domain = 'typically_your_company_name'
+
 # Call the `export_sfdc_report_into_spark_as_view` method on the Salesforce_Spark_Connector instance, passing in the report ID and view name
-sf_connector.export_sfdc_report_into_spark_as_view(report_id, view_name)
+sf_connector.export_sfdc_report_into_spark_as_view(report_id, view_name, domain)
 
 # Now you can use Spark SQL to query the data in the view
 # For example, you could run a SELECT statement to get all the data from the view
