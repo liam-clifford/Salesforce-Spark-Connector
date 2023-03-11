@@ -20,7 +20,7 @@ spark = SparkSession \
     .getOrCreate()
 # OPTIONAL IF USING Databricks
 
-class Salesforce_SOQL_Spark_Connector:
+class Salesforce_Spark_Connector:
     def __init__(self, username, password, security_token):
         self.username = username
         self.password = password
@@ -199,3 +199,24 @@ class Salesforce_SOQL_Spark_Connector:
             master_df.createOrReplaceTempView(temp_view)
         else:
             print(f'0 rows returned for query "{query}"')
+
+        
+    def export_sfdc_report_into_spark_as_view(self, salesforce_report_id,temp_name):
+        self.auth()
+        headers  = {'Authorization': self.sf.session_id}
+        cookie   = {'sid': self.sf.session_id}
+        response = requests.get(f"https://databricks.my.salesforce.com/{salesforce_report_id}?isdtp=p1&export=1&enc=UTF-8&xf=csv", headers=headers, cookies=cookie)
+
+        urlData  = response.content
+        rawData  = pd.read_csv(io.StringIO(urlData.decode('utf-8')))
+
+        # convert all columns to strings
+        lst = list(rawData)
+        rawData[lst] = rawData[lst].astype(str)
+
+        spark = SparkSession.builder.getOrCreate()
+        spark_df = spark.createDataFrame(rawData)
+
+        updated_columns = spark_df.columns
+        spark_df_final  = spark_df.toDF(*updated_columns)
+        spark_df_final.createOrReplaceTempView(f'{temp_name}')
