@@ -30,6 +30,9 @@ class Salesforce_Spark_Connector:
         self.sf = None
 
     def auth(self):
+        import simple_salesforce
+        from simple_salesforce import Salesforce
+        
         self.sf = Salesforce(
             username=''.join([i for i in self.username]),
             password=''.join([i for i in self.password]),
@@ -202,6 +205,9 @@ class Salesforce_Spark_Connector:
 
         
     def export_sfdc_report_into_spark_as_view(self, salesforce_report_id, temp_name, domain):
+        import io
+        import pandas as pd
+        
         self.auth()
         headers  = {'Authorization': self.sf.session_id}
         cookie   = {'sid': self.sf.session_id}
