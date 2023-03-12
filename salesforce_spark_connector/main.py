@@ -40,16 +40,7 @@ class Salesforce_Spark_Connector:
             security_token=''.join([i for i in self.security_token]),
             session=self.session
         )
-
-    def get_fields_and_object(self, query):
         
-        import re
-        
-        assert 'from' in query.lower(), 'FROM is missing from your query (You need to specify an object to query from)'
-        fields = re.search(r'select(.*)from', query, re.IGNORECASE).group(1).replace(' ', '')
-        object = query.lower().split('from ')[1].split(' ')[0]
-        select_star = '*' in fields
-        return fields, object, select_star
 
     def build_query(self, fields_a, fields_b, object, where, group_by, order_by, limit):
         query_a = f'SELECT {fields_a} FROM {object} {where} {group_by} {order_by} {limit}'
@@ -89,33 +80,38 @@ class Salesforce_Spark_Connector:
         else:
             return None
 
-    def get_where(self, query):
-        
+          
+    def get_where(self,query):
+          
         import re
-        
-        match = re.search(r'where(.+?)(?:\s+group by|\s+order by|\s+limit|$)', query, re.IGNORECASE)
+          
+        match = re.search(r'where(.+?)(?:(\s+group\s+by)|(\s+order\s+by)|(\s+limit)|$)', query, re.IGNORECASE | re.DOTALL)
         return 'WHERE ' + match.group(1) if match else ''
 
-    def get_group_by(self, query):
-        
+    
+    def get_group_by(self,query):
+          
         import re
-        
-        match = re.search(r'group by(.+?)(?:\s+order by|\s+limit|$)', query, re.IGNORECASE)
+          
+        match = re.search(r'group\s+by(.+?)(?:(\s+order\s+by)|(\s+limit)|$)', query, re.IGNORECASE | re.DOTALL)
         return 'GROUP BY ' + match.group(1) if match else ''
-      
-    def get_order_by(self, query):
-        
+
+    
+    def get_order_by(self,query):
+          
         import re
-        
-        match = re.search(r'order by(.+?)(?:\s+limit|$)', query, re.IGNORECASE)
+          
+        match = re.search(r'order\s+by(.+?)(\s+limit|$)', query, re.IGNORECASE | re.DOTALL)
         return 'ORDER BY ' + match.group(1) if match else ''
-      
+
+    
     def get_limit(self,query):
-        
+          
         import re
-        
-        match = re.search(r'limit(.*)', query, re.IGNORECASE)
+          
+        match = re.search(r'limit(.+?)(?:$)', query, re.IGNORECASE | re.DOTALL)
         return 'LIMIT ' + match.group(1) if match else ''
+    
 
     def get_query_lists(self, data, select_star):
         
@@ -181,7 +177,7 @@ class Salesforce_Spark_Connector:
 
         # Get fields and object from the query
         assert 'from' in query.lower(), 'FROM is missing from your query (You need to specify an object to query from)'
-        fields = re.search(r'select(.*)from', query, re.IGNORECASE).group(1).replace(' ', '')
+        fields = re.search(r'select\s+(.*?)\s+from', query, re.IGNORECASE).group(1).replace(' ', '')
         object = query.lower().split('from ')[1].split(' ')[0]
 
         # Build the query strings for API calls
