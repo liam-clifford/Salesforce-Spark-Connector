@@ -3,10 +3,12 @@
 The Salesforce Spark Connector is a Python library that makes it easy to retrieve data from Salesforce and materialize it in a Spark Temporary View. This library provides two main functionalities:
 
 #### 1. Querying Salesforce Data with SOQL
-- The first main functionality is the ability to easily query Salesforce data using Salesforce Object Query Language (SOQL) and store the data in a Spark Temporary View
+- Makes it easy to query Salesforce data using Salesforce Object Query Language (SOQL) and store the data in a Spark Temporary View
 
 #### 2. Exporting Salesforce Report Data to Spark
-- The second main functionality is the ability to export data from Salesforce reports and store it in a Spark Temporary View
+- Simulates the export of a Salesforce Report (using python's requests library) and stores it in a Spark Temporary View
+
+
 
 ### Authentication
 
@@ -14,12 +16,6 @@ To use this code in your environment, you need to have your Salesforce username,
 
 This code uses Databricks Secrets to securely access your Salesforce credentials. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code instead of using Databricks Secrets. To do this, replace the calls to `dbutils.secrets.get()` with the appropriate code to retrieve your Salesforce credentials.
 
-
-### Authentication
-
-To use this code in your environment, you need to have your Salesforce username, password, and security token stored as secrets with the names `salesforce/username`, `salesforce/password`, and `salesforce/token`, respectively.
-
-This code uses Databricks Secrets to securely access your Salesforce credentials. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code instead of using Databricks Secrets. To do this, replace the calls to `dbutils.secrets.get()` with the appropriate code to retrieve your Salesforce credentials.
 
 
 ### Basic Setup
@@ -34,6 +30,8 @@ This code uses Databricks Secrets to securely access your Salesforce credentials
 ```python
 %pip install ./Salesforce-Spark-Connector
 ```
+
+
 
 ### Functionality
 
@@ -69,6 +67,8 @@ This code defines a class called `Salesforce_Spark_Connector` with the following
   - Retrieves data from Salesforce using a SOQL query, cleans up the data, and stores it in a temporary Spark SQL view.
 - `export_sfdc_report_into_spark_as_view(self, salesforce_report_id, temp_name, domain)`:
   - Retrieves a Salesforce report in CSV format and stores it in a temporary Spark SQL view, allowing the user to easily analyze the report data using SQL.
+
+
 
 ### Usage
 
