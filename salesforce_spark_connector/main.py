@@ -30,6 +30,7 @@ class Salesforce_Spark_Connector:
         self.sf = None
 
     def auth(self):
+        
         import simple_salesforce
         from simple_salesforce import Salesforce
         
@@ -41,6 +42,9 @@ class Salesforce_Spark_Connector:
         )
 
     def get_fields_and_object(self, query):
+        
+        import re
+        
         assert 'from' in query.lower(), 'FROM is missing from your query (You need to specify an object to query from)'
         fields = re.search(r'select(.*)from', query, re.IGNORECASE).group(1).replace(' ', '')
         object = query.lower().split('from ')[1].split(' ')[0]
@@ -86,22 +90,37 @@ class Salesforce_Spark_Connector:
             return None
 
     def get_where(self, query):
+        
+        import re
+        
         match = re.search(r'where(.+?)(?:\s+group by|\s+order by|\s+limit|$)', query, re.IGNORECASE)
         return 'WHERE ' + match.group(1) if match else ''
 
     def get_group_by(self, query):
+        
+        import re
+        
         match = re.search(r'group by(.+?)(?:\s+order by|\s+limit|$)', query, re.IGNORECASE)
         return 'GROUP BY ' + match.group(1) if match else ''
       
     def get_order_by(self, query):
+        
+        import re
+        
         match = re.search(r'order by(.+?)(?:\s+limit|$)', query, re.IGNORECASE)
         return 'ORDER BY ' + match.group(1) if match else ''
       
     def get_limit(self,query):
+        
+        import re
+        
         match = re.search(r'limit(.*)', query, re.IGNORECASE)
         return 'LIMIT ' + match.group(1) if match else ''
 
     def get_query_lists(self, data, select_star):
+        
+        import re
+        
         exceeds_field_threshold = False
 
         if len(data['fields']) > 400 and select_star:
@@ -118,6 +137,10 @@ class Salesforce_Spark_Connector:
 
 
     def build_query_fields(self, fields, object, include_deleted):
+        
+        import re
+        import pandas as pd
+        
         select_star = '*' in fields
         
         if select_star:
@@ -152,6 +175,7 @@ class Salesforce_Spark_Connector:
 
       
     def create_temp_view_from_salesforce_object(self, query, temp_view, include_deleted=False, print_soql=True):
+        
         import re
         import pandas as pd
 
@@ -205,8 +229,12 @@ class Salesforce_Spark_Connector:
 
         
     def export_sfdc_report_into_spark_as_view(self, salesforce_report_id, temp_name, domain):
-        import io
+
         import pandas as pd
+        import requests
+        import base64
+        import json
+        import io
         
         self.auth()
         headers  = {'Authorization': self.sf.session_id}
