@@ -12,10 +12,9 @@ The Salesforce Spark Connector is a Python library that makes it easy to retriev
 
 ### Authentication
 
-To use this code in your environment, you need to have your Salesforce username, password, and security token stored as secrets with the names `salesforce/username`, `salesforce/password`, and `salesforce/token`, respectively.
+- To use this code in your environment, you need to have your Salesforce username, password, and security token available.
 
-This code uses Databricks Secrets to securely access your Salesforce credentials. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code instead of using Databricks Secrets. To do this, replace the calls to `dbutils.secrets.get()` with the appropriate code to retrieve your Salesforce credentials.
-
+- I personally use [Databricks Secrets](https://docs.databricks.com/dev-tools/cli/secrets-cli.html) for storing secrets securely. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code instead of using Databricks Secrets. To do this, replace the calls to `dbutils.secrets.get()` with the appropriate code to retrieve/define your Salesforce credentials.
 
 
 ### Basic Setup
@@ -120,7 +119,7 @@ display(data)
 #### Here's an example of how to use this connector to export a Salesforce Report ID and query it directly using Spark:
 ```python
 # Define the ID of the Salesforce report you want to export (the ID typically starts with `00O`)
-report_id = 'insert_your_18_digit_salesforce_report_id'
+salesforce_report_id = 'insert_your_18_digit_salesforce_report_id'
 
 # Define the name you want to give to the temporary Spark SQL view that will be created from the report data
 view_name = 'my_report_data'
@@ -128,8 +127,8 @@ view_name = 'my_report_data'
 # Input your Company's Salesforce Domain (Typically located: `https://{domain}.lightning.force.com/` or `https://{domain}.my.salesforce.com`)
 domain = 'your_company_sfdc_domain'
 
-# Call the `export_sfdc_report_into_spark_as_view` method on the Salesforce_Spark_Connector instance, passing in the report ID, view name, and your domain
-connect_to_sfdc_api.export_sfdc_report_into_spark_as_view(report_id, view_name, domain)
+# Call the `export_sfdc_report_into_spark_as_view` method on the Salesforce_Spark_Connector instance, passing in the Salesforce report ID, view name, and your domain
+connect_to_sfdc_api.export_sfdc_report_into_spark_as_view(salesforce_report_id, view_name, domain)
 
 # Now you can use Spark SQL to query the data stored in your temp view
 display(spark.sql(f"SELECT * FROM {view_name}"))
