@@ -13,7 +13,7 @@ The Salesforce Spark Connector is a Python library that makes it easy to retriev
 ### Prerequisites
 
 #### Credentials:
-- To use this code in your environment, you need to have your Salesforce username, password, and security token available.
+- To use this code in your environment, you need to have your Salesforce `username`, `password`, and `security token` available.
   - I personally use [Databricks Secrets](https://docs.databricks.com/security/secrets/index.html) for storing secrets. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code of course.
 
 #### API Enabled Profile Permission:
