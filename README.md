@@ -14,6 +14,27 @@ To use this code in your environment, you need to have your Salesforce username,
 
 This code uses Databricks Secrets to securely access your Salesforce credentials. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code instead of using Databricks Secrets. To do this, replace the calls to `dbutils.secrets.get()` with the appropriate code to retrieve your Salesforce credentials.
 
+
+### Authentication
+
+To use this code in your environment, you need to have your Salesforce username, password, and security token stored as secrets with the names `salesforce/username`, `salesforce/password`, and `salesforce/token`, respectively.
+
+This code uses Databricks Secrets to securely access your Salesforce credentials. If you are not using Databricks, you can still use this code by substituting your own credentials directly in the code instead of using Databricks Secrets. To do this, replace the calls to `dbutils.secrets.get()` with the appropriate code to retrieve your Salesforce credentials.
+
+
+### Basic Setup
+- Clone the repository:
+```python
+%sh rm -rf Salesforce-Spark-Connector
+```
+```python
+%sh git clone https://github.com/liam-clifford/Salesforce-Spark-Connector.git
+```
+- Install the library using pip:
+```python
+%pip install ./Salesforce-Spark-Connector
+```
+
 ### Functionality
 
 This code defines a class called `Salesforce_Spark_Connector` with the following methods:
@@ -51,23 +72,41 @@ This code defines a class called `Salesforce_Spark_Connector` with the following
 
 ### Usage
 
-Here's an example of how to use this connector to query SOQL using Spark:
+#### Here's how you would `authenticate`:
 
+1. Initialize Spark Session (This depends on your working environment and will not always be needed)
 ```python
 from pyspark.sql import SparkSession
 
-spark = SparkSession.builder.appName('Salesforce SOQL Spark Connector').getOrCreate()
+spark = SparkSession.builder.appName('Salesforce SOQL Spark Connector').getOrCreate() 
+```
 
-# Initialize the Salesforce_Spark_Connector object
-sf_to_spark = Salesforce_Spark_Connector(dbutils.secrets.get("salesforce", "username"), dbutils.secrets.get("salesforce", "password"), dbutils.secrets.get("salesforce", "token"))
-sf_to_spark.auth()
+2. Import the `Salesforce_Spark_Connector` module:
+```python
+import Salesforce_Spark_Connector
+from Salesforce_Spark_Connector import Salesforce_Spark_Connector
+```
 
+3. Set up the Salesforce API connection by providing your Salesforce `username`, `password`, and `security token`:
+```python
+sf_username = 'your_salesforce_username'
+sf_password = 'your_salesforce_password'
+sf_token    = 'your_salesforce_token'
+
+connect_to_sfdc_api = Salesforce_Spark_Connector(username=sf_username, password=sf_password, security_token=sf_token)
+connect_to_sfdc_api.auth()
+```
+
+
+
+#### Here's an example of how to use this connector to query SOQL using Spark:
+```python
 # Define the SOQL query to retrieve data
-query     = "SELECT owner.name,* FROM opportunity limit 1"
+query = "SELECT owner.name,* FROM opportunity limit 1"
 temp_view = "temp_view"
 
 # Create a temporary view of the Salesforce object in a Spark dataframe
-sf_to_spark.create_temp_view_from_salesforce_object(query, temp_view)
+connect_to_sfdc_api.create_temp_view_from_salesforce_object(query, temp_view)
 
 # Query the Spark dataframe to retrieve the data
 data = spark.sql(f"SELECT * FROM {temp_view}")
@@ -77,18 +116,11 @@ display(data)
 ```
 
 
-Here's an example of how to use this connector to export a Salesforce Report ID and query it directly using Spark:
 
+#### Here's an example of how to use this connector to export a Salesforce Report ID and query it directly using Spark:
 ```python
-from pyspark.sql import SparkSession
-
-spark = SparkSession.builder.appName('Salesforce SOQL Spark Connector').getOrCreate()
-
-# Create a new instance of the Salesforce_Spark_Connector class, passing in your Salesforce credentials
-sf_connector = Salesforce_Spark_Connector(username='your_sf_username', password='your_sf_password', security_token='your_sf_security_token')
-
 # Define the ID of the Salesforce report you want to export (the ID typically starts with `00O`)
-report_id = 'insert_your_18_digit_salesforce_id_here'
+report_id = 'insert_your_18_digit_salesforce_report_id'
 
 # Define the name you want to give to the temporary Spark SQL view that will be created from the report data
 view_name = 'my_report_data'
@@ -96,12 +128,11 @@ view_name = 'my_report_data'
 # Input your Company's Salesforce Domain (Typically located: `https://{domain}.lightning.force.com/` or `https://{domain}.my.salesforce.com`)
 domain = 'your_company_sfdc_domain'
 
-# Call the `export_sfdc_report_into_spark_as_view` method on the Salesforce_Spark_Connector instance, passing in the report ID and view name
-sf_connector.export_sfdc_report_into_spark_as_view(report_id, view_name, domain)
+# Call the `export_sfdc_report_into_spark_as_view` method on the Salesforce_Spark_Connector instance, passing in the report ID, view name, and your domain
+connect_to_sfdc_api.export_sfdc_report_into_spark_as_view(report_id, view_name, domain)
 
-# Now you can use Spark SQL to query the data in the view
-# For example, you could run a SELECT statement to get all the data from the view
-spark.sql(f"SELECT * FROM {view_name}").show()
+# Now you can use Spark SQL to query the data stored in your temp view
+display(spark.sql(f"SELECT * FROM {view_name}"))
 
 # Behind the scenes, the export_sfdc_report_into_spark_as_view method is doing the following:
 # 1. Authenticating with Salesforce using your credentials
@@ -109,6 +140,6 @@ spark.sql(f"SELECT * FROM {view_name}").show()
 # 3. Parsing the CSV data using Pandas
 # 4. Converting the Pandas DataFrame to a Spark DataFrame
 # 5. Creating a temporary SQL view from the Spark DataFrame
-# All of this replicates the process of manually exporting a report from Salesforce, but with the added benefit of being automated and integrated with your Spark environment.
-# Keep in mind that this method may not be suitable for very large reports, as it may fail due to the sheer size of the report. Also note that it will only pull the data that is visible in the report, so if you need additional fields (like IDs), you'll need to add those to the report before exporting.
+
+# Keep in mind that this method may not be suitable for very large reports, as it may fail due to the sheer size of the report.
 ```
