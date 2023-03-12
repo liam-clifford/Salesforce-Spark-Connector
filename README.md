@@ -142,3 +142,15 @@ display(spark.sql(f"SELECT * FROM {view_name}"))
 
 # Keep in mind that this method may not be suitable for very large reports, as it may fail due to the sheer size of the report.
 ```
+
+### Limitations
+- When you use lookup fields and `limit` together, the REST API returns the first part of the lookup field only
+    ```python
+    SELECT account.owner.name FROM opportunity LIMIT 1 
+    ```
+    - Returns: `Account`
+- Whereas:
+    ```python
+    SELECT account.owner.name FROM opportunity
+    ```
+    - Returns: `Account.Owner.Name`
