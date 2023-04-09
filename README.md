@@ -11,7 +11,7 @@ The Salesforce Spark Connector is a Python library that makes it easy to retriev
 
 ### Shameless Plug
 - Related Medium Post
-  - Here's a [link]([url](https://medium.com/@liam_clifford/query-salesforce-soql-data-in-spark-5355b95122e5) to a (hopefully) less technical version of this! 
+  - Here's a [link](https://medium.com/@liam_clifford/query-salesforce-soql-data-in-spark-5355b95122e5) to a (hopefully) less technical version of this! 
 
 ### Prerequisites
 
