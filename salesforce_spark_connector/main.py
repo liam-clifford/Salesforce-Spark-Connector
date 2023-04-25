@@ -84,6 +84,7 @@ class Salesforce_Spark_Connector:
     def get_where(self,query):
           
         import re
+        query = re.sub(r'\n',' ',query)
           
         match = re.search(r'where(.+?)(?:(\s+group\s+by)|(\s+order\s+by)|(\s+limit)|$)', query, re.IGNORECASE | re.DOTALL)
         return 'WHERE ' + match.group(1) if match else ''
@@ -92,6 +93,7 @@ class Salesforce_Spark_Connector:
     def get_group_by(self,query):
           
         import re
+        query = re.sub(r'\n',' ',query)
           
         match = re.search(r'group\s+by(.+?)(?:(\s+order\s+by)|(\s+limit)|$)', query, re.IGNORECASE | re.DOTALL)
         return 'GROUP BY ' + match.group(1) if match else ''
@@ -100,6 +102,7 @@ class Salesforce_Spark_Connector:
     def get_order_by(self,query):
           
         import re
+        query = re.sub(r'\n',' ',query)
           
         match = re.search(r'order\s+by(.+?)(\s+limit|$)', query, re.IGNORECASE | re.DOTALL)
         return 'ORDER BY ' + match.group(1) if match else ''
@@ -108,6 +111,7 @@ class Salesforce_Spark_Connector:
     def get_limit(self,query):
           
         import re
+        query = re.sub(r'\n',' ',query)
           
         match = re.search(r'limit(.+?)(?:$)', query, re.IGNORECASE | re.DOTALL)
         return 'LIMIT ' + match.group(1) if match else ''
