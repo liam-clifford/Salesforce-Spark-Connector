@@ -77,7 +77,7 @@ class Salesforce_Spark_Connector:
             except Exception as e:
                 if str(e).lower().find('malformed request')!=-1:
                     code = format_string_to_json(str(e))['errorCode'].replace('NEW_LINE','\n')
-                    print(f'Error Message ({code}): ',format_string_to_json(str(e))['message'].replace('NEW_LINE','\n'))
+                    print(f'\nError Message ({code}): ',format_string_to_json(str(e))['message'].replace('NEW_LINE','\n'))
                 if 'ConnectionError' in str(e) or 'REQUEST_LIMIT_EXCEEDED' in str(e):
                     print(f'{e}... pausing 10 seconds before re-attempting')
                     time.sleep(10)
@@ -172,7 +172,7 @@ class Salesforce_Spark_Connector:
             except Exception as e:
                 if str(e).lower().find('malformed request')!=-1:
                     code = format_string_to_json(str(e))['errorCode'].replace('NEW_LINE','\n')
-                    print(f'Error Message ({code}): ',format_string_to_json(str(e))['message'].replace('NEW_LINE','\n'))
+                    print(f'\nError Message ({code}): ',format_string_to_json(str(e))['message'].replace('NEW_LINE','\n'))
                 if 'ConnectionError' in str(e) or 'REQUEST_LIMIT_EXCEEDED' in str(e):
                     print(f'{e}... pausing 10 seconds before re-attempting')
                     time.sleep(10)
