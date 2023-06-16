@@ -20,6 +20,25 @@ spark = SparkSession \
     .getOrCreate()
 # OPTIONAL IF USING Databricks
 
+def format_string_to_json(input_string):
+    # Extract the JSON part from the raw string
+    json_string = input_string[input_string.find("[{"):input_string.rfind("}]")+2]
+
+    # Remove single and double quotes
+    input_string = json_string.replace("'", "").replace('"', '')
+
+    # Replace keys and string values with double-quoted strings
+    pattern = r'([a-zA-Z_]+): ([\s\S]+?)(?=,\s*[a-zA-Z_]+:|})'
+    formatted_string = re.sub(pattern, r'"\1": "\2"', input_string)
+
+    # Remove surrounding brackets and replace line breaks
+    final = formatted_string[1:-1].replace('\n', 'NEW_LINE')
+
+    # Load the formatted string into a Python object
+    data = json.loads(final)
+
+    return data
+    
 class Salesforce_Spark_Connector:
     def __init__(self, username, password, security_token):
         self.username = username
@@ -56,6 +75,9 @@ class Salesforce_Spark_Connector:
                 data = self.sf.query_all(query, include_deleted=include_deleted)
                 break
             except Exception as e:
+                if str(e).lower().find('malformed request')!=-1:
+                    code = format_string_to_json(str(e))['errorCode'].replace('NEW_LINE','\n')
+                    print(f'Error Message ({code}): ',format_string_to_json(str(e))['message'].replace('NEW_LINE','\n'))
                 if 'ConnectionError' in str(e) or 'REQUEST_LIMIT_EXCEEDED' in str(e):
                     print(f'{e}... pausing 10 seconds before re-attempting')
                     time.sleep(10)
@@ -148,6 +170,9 @@ class Salesforce_Spark_Connector:
                 rest_query = f'sobjects/{object}/describe/'
                 data = self.sf.restful(rest_query, params=None)
             except Exception as e:
+                if str(e).lower().find('malformed request')!=-1:
+                    code = format_string_to_json(str(e))['errorCode'].replace('NEW_LINE','\n')
+                    print(f'Error Message ({code}): ',format_string_to_json(str(e))['message'].replace('NEW_LINE','\n'))
                 if 'ConnectionError' in str(e) or 'REQUEST_LIMIT_EXCEEDED' in str(e):
                     print(f'{e}... pausing 10 seconds before re-attempting')
                     time.sleep(10)
