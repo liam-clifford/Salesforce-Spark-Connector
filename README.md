@@ -89,8 +89,8 @@ spark = SparkSession.builder.appName('Salesforce SOQL Spark Connector').getOrCre
 
 2. Import the `Salesforce_Spark_Connector` module:
 ```python
-import Salesforce_Spark_Connector
-from Salesforce_Spark_Connector import Salesforce_Spark_Connector
+import salesforce_spark_connector
+from salesforce_spark_connector import Salesforce_Spark_Connector
 ```
 
 3. Set up the Salesforce API connection by providing your Salesforce `username`, `password`, and `security token`:
