@@ -90,7 +90,7 @@ class Salesforce_Spark_Connector:
     def run_query(self, query, include_deleted=False):
         while True:
             try:
-                data = self.sf.query_all(query.replace('\n',' '), include_deleted=include_deleted)
+                data = self.sf.query_all(query, include_deleted=include_deleted)
                 break
             except Exception as e:
                 if str(e).lower().find('malformed request')!=-1:
@@ -221,6 +221,8 @@ class Salesforce_Spark_Connector:
         
         import re
         import pandas as pd
+
+        query = query.replace('\n',' ')
 
         # Get fields and object from the query
         assert 'from' in query.lower(), 'FROM is missing from your query (You need to specify an object to query from)'
