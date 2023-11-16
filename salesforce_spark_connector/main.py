@@ -53,13 +53,31 @@ class Salesforce_Spark_Connector:
         import simple_salesforce
         from simple_salesforce import Salesforce
         
-        self.sf = Salesforce(
-            username=''.join([i for i in self.username]),
-            password=''.join([i for i in self.password]),
-            security_token=''.join([i for i in self.security_token]),
-            session=self.session
-        )
+        login_attempts = 0
         
+        while True:
+            login_attempts += 1
+            try:
+                self.sf = Salesforce(
+                    username=''.join([i for i in self.username]),
+                    password=''.join([i for i in self.password]),
+                    security_token=''.join([i for i in self.security_token]),
+                    session=self.session
+                )
+                # If you reach this point, the initialization was successful
+                return sf  # Authentication successful, return the Salesforce object
+            except Exception as e:
+                error_message = str(e)
+                if "invalid_login" in error_message.lower():
+                    # FULL ERROR : `SalesforceAuthenticationFailed: INVALID_LOGIN: Invalid username, password, security token; or user locked out.`
+                    # Handle the authentication error, you can log it or perform any other actions needed
+                    print(f"Authentication failed on attempt #{login_attempts}: {error_message}")
+                    print(f"Retrying in a moment ({timeout_secs} seconds)...")
+                    # Sleep for a while before retrying (you can adjust the sleep duration)
+                    time.sleep(timeout_secs)  # Sleep for 30 seconds before retrying
+                else:
+                    # If it's a different error, raise it
+                    raise e
 
     def build_query(self, fields_a, fields_b, object, where, group_by, order_by, limit):
         query_a = f'SELECT {fields_a} FROM {object} {where} {group_by} {order_by} {limit}'
@@ -72,7 +90,7 @@ class Salesforce_Spark_Connector:
     def run_query(self, query, include_deleted=False):
         while True:
             try:
-                data = self.sf.query_all(query, include_deleted=include_deleted)
+                data = self.sf.query_all(query.replace('\n',' '), include_deleted=include_deleted)
                 break
             except Exception as e:
                 if str(e).lower().find('malformed request')!=-1:
